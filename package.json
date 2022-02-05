@@ -1,0 +1,9 @@
+{
+  "homepage": "http://revanthchimmani.github.io/Real-time-Stock-Price-Chart",
+  "dependencies": {
+    "gh-pages": "^3.2.3"
+  },
+  "scripts": {
+    "deploy":"gh-pages -d build"
+  }
+}

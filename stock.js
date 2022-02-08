@@ -33,6 +33,15 @@ var timelyUpdate = "";
 var finnhubToken = "c7ucun2ad3ifisk2mg7g";
 var polygonToken = "CQ_gigWrKpIkxHjcw_TpTNv1f05aYNPE";
 
+//Default Date() in NewYork Timezone
+var stock_date_est = new Date(
+  new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York",
+  })
+);
+//"YYYY-MM_DD"
+var formatted_stock_date_est = stock_date_est.toISOString().slice(0, 10);
+
 function addOrUpdateStockList() {
   var li = document.createElement("li");
   var inputValue = document.getElementById("myInput").value;
@@ -95,9 +104,6 @@ function prepareMultiChart(stockSymbol, response) {
   // As we're loading the data asynchronously, we don't know what order it
   // will arrive. So we keep a counter and create the chart when all the data is loaded.
   seriesCounter += 1;
-  if (seriesCounter === mapStock.length) {
-    createSeriesChart();
-  }
 }
 function updateBarChart() {
   barChartXcoordinate.push(new Date().toLocaleString());
@@ -151,11 +157,15 @@ function showHistoricalData() {
       getHistoricalData(stocksMap[urlIndex]);
     }
   }
+  if (seriesCounter === mapStock.length) {
+    createSeriesChart();
+  }
 }
-
+var formattedDate = new Date().toISOString().slice(0, 10);
 function getHistoricalData(stockSymbol) {
   let captitalStockSymbol = stockSymbol.toUpperCase();
-  let url = `https://api.polygon.io/v2/aggs/ticker/${captitalStockSymbol}/range/1/day/2021-01-01/2022-02-02?adjusted=false&sort=asc&limit=500&apiKey=${polygonToken}`;
+  console.log(formatted_stock_date_est);
+  let url = `https://api.polygon.io/v2/aggs/ticker/${captitalStockSymbol}/range/1/day/2021-01-01/${formatted_stock_date_est}?adjusted=false&sort=asc&limit=500&apiKey=${polygonToken}`;
   fetch(url)
     .then((response) => response.json())
     .then(function (response) {
@@ -176,12 +186,6 @@ function valid_date() {
   // converting them into minutes from 24 hour time format
   var start_time = 9 * 60 + 30;
   var end_time = 16 * 60;
-  local_date = new Date();
-  stock_date_est = new Date(
-    new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York",
-    })
-  );
 
   // get EST's month and date to know if it is a holiday
   stock_month = stock_date_est.getMonth();
@@ -196,8 +200,6 @@ function valid_date() {
   else if (stock_date_est.getDay() == 6 || stock_date_est.getDay() == 0) {
     holiday = true;
     holiday_reason = "Weekend";
-  } else {
-    holiday_reason = null;
   }
 
   let time_now = stock_date_est.getHours() * 60 + stock_date_est.getMinutes();
@@ -206,6 +208,7 @@ function valid_date() {
   if (start_time <= time_now && time_now <= end_time) {
     time_up = false;
   } else {
+    holiday_reason = "stocks off hours";
     time_up = true;
   }
   result = [holiday, holiday_reason, time_up];
@@ -237,9 +240,6 @@ function check_interval_seconds() {
 
 function drawBarChart() {
   Highcharts.chart("barchartcontainer", {
-    // rangeSelector: {
-    //   selected: 1,
-    // },
     chart: {
       type: "column",
     },
